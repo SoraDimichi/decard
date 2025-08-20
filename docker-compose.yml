@@ -9,30 +9,37 @@ services:
     container_name: nestjs_api
     restart: always
     ports:
-      - '3000:3000'
+      - '${PORT}:${PORT}'
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=${DATABASE_URL}
-      - PORT=${PORT:-3000}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=public
+      - PORT=${PORT}
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
-    command: npm run start:dev
+    command: sh -c "npx prisma migrate deploy && npm run start:dev"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres:15
     container_name: postgres
     restart: always
     ports:
-      - '5432:5432'
+      - '${DB_PORT}:${DB_PORT}'
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: nestjs
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 volumes:
   postgres_data:

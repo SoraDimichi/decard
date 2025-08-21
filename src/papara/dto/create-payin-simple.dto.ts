@@ -2,7 +2,7 @@ import { IsInt, Min } from 'class-validator';
 import { IsString, IsUrl, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class CreatePayinSimpleDto {
+export class CreatePayinDto {
   @IsInt()
   @Min(1)
   amount: number;
@@ -19,7 +19,7 @@ class BillingDetailsDto {
   bank_name: string;
 }
 
-export class CreatePayinSimpleResponseDto {
+export class CreatePayinResponseDto {
   @IsUrl()
   redirect_url: string;
 

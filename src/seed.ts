@@ -2,6 +2,14 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+export const DEFAULT_USER = {
+  id: 1,
+  first_name: 'Admin',
+  last_name: 'User',
+  email: 'admin@example.com',
+  password: 'password123',
+};
+
 const main = async () => {
   // Check if admin user already exists
   const existingAdmin = await prisma.user.findUnique({
@@ -10,13 +18,7 @@ const main = async () => {
 
   if (!existingAdmin) {
     await prisma.user.create({
-      data: {
-        id: 1,
-        email: 'admin@example.com',
-        first_name: 'Admin',
-        last_name: 'User',
-        password: 'password123',
-      },
+      data: DEFAULT_USER,
     });
     console.log('Admin user created');
   } else {

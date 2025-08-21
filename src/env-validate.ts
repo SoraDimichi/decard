@@ -3,6 +3,7 @@ import {
   IsEnum,
   IsNumber,
   IsString,
+  IsUUID,
   Max,
   Min,
   validateSync,
@@ -24,6 +25,12 @@ class EnvironmentVariables {
 
   @IsString()
   DATABASE_URL: string;
+
+  @IsString()
+  SECRET_KEY: string;
+
+  @IsUUID()
+  SHOP_KEY: string;
 }
 
 export const validate = (config: Record<string, unknown>) => {

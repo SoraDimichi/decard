@@ -14,10 +14,12 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=public
       - PORT=${PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - SHOP_KEY=${SHOP_KEY}
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
-    command: sh -c "npx prisma migrate deploy && npm run start:dev"
+    command: sh -c "npx prisma migrate dev --name init && npm run start:dev"
     depends_on:
       postgres:
         condition: service_healthy

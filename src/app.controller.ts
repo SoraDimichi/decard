@@ -13,7 +13,13 @@ export class AppController {
 
   @Post('users')
   createUser(
-    @Body() userData: { name?: string; email: string; password: string },
+    @Body()
+    userData: {
+      first_name: string;
+      last_name: string;
+      email: string;
+      password: string;
+    },
   ): Promise<User> {
     return this.appService.createUser(userData);
   }

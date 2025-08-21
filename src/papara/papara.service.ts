@@ -38,8 +38,43 @@ export class PaparaService {
     };
   }
 
+  private async makeApiRequest<
+    T extends Record<string, unknown>,
+    R extends object,
+  >(endpoint: string, payload: T, responseType: new () => R): Promise<R> {
+    const url = new URL(endpoint, this.baseUrl);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: this.getSignedHeaders(payload),
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = plainToInstance(responseType, await response.json());
+      const errors = await validate(data);
+
+      if (errors.length > 0) {
+        throw new Error('Invalid API response');
+      }
+
+      return data;
+    } catch (error) {
+      throw new Error(`API request failed: ${error.message}`);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   async createPayin(payload: CreatePayinDto) {
-    const p = {
+    const preparedPayload = {
       ...payload,
       shop_key: this.shopKey,
       order_currency: this.currency,
@@ -54,67 +89,25 @@ export class PaparaService {
         user_id: DEFAULT_USER.id,
       },
     };
-
-    const url = new URL('/rest/paymentgate/simple/', this.baseUrl);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: this.getSignedHeaders(p),
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const data = plainToInstance(CreatePayinResponseDto, await response.json());
-
-    const errors = await validate(data);
-    if (errors.length > 0) throw new Error('Invalid API response');
+    return this.makeApiRequest(
+      '/rest/paymentgate/simple/',
+      preparedPayload,
+      CreatePayinResponseDto,
+    );
   }
 
   async createPaparaPayout(payload: CreatePayoutDto) {
-    const p = {
+    const preparedPayload = {
       ...payload,
       currency: this.currency,
       user_id: DEFAULT_USER.id,
       recipient_full_name: `${DEFAULT_USER.first_name} ${DEFAULT_USER.last_name}`,
       shop_key: this.shopKey,
     };
-
-    const url = new URL('/rest/payoutgate/papara/', this.baseUrl);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-    try {
-      const response = await fetch(url.toString(), {
-        method: 'POST',
-        headers: this.getSignedHeaders(p),
-        body: JSON.stringify(p),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = plainToInstance(
-        CreatePayoutResponseDto,
-        await response.json(),
-      );
-      const errors = await validate(data);
-      if (errors.length > 0) throw new Error('Invalid API response');
-
-      return data;
-    } catch (error) {
-      throw new Error(`Failed to create Papara payout: ${error.message}`);
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    return this.makeApiRequest(
+      '/rest/payoutgate/papara/',
+      preparedPayload,
+      CreatePayoutResponseDto,
+    );
   }
 }

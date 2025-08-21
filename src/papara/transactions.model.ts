@@ -31,10 +31,6 @@ export class TransactionsModel {
     });
   }
 
-  find(orderToken: string) {
-    return this.prisma.transaction.findUnique({ where: { orderToken } });
-  }
-
   private getStatus(status: string) {
     switch (status.toLowerCase()) {
       case 'completed':
@@ -65,14 +61,14 @@ export class TransactionsModel {
 
   async update(payload: {
     status: string;
-    id: number;
+    orderToken: string;
     errorCode?: string;
     errorMessage?: string;
   }) {
-    const { status, id, errorCode, errorMessage } = payload;
+    const { status, orderToken, errorCode, errorMessage } = payload;
 
     return this.prisma.transaction.update({
-      where: { id },
+      where: { orderToken },
       data: {
         status: this.getStatus(status),
         errorCode,

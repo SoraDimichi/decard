@@ -36,14 +36,10 @@ export class PaparaPayoutService extends PaparaBaseService {
       'PUT',
     );
 
-    const transaction = await this.transactions.find(response.order_token);
-
-    if (transaction) {
-      await this.transactions.update({
-        id: transaction.id,
-        status: response.status,
-      });
-    }
+    await this.transactions.update({
+      orderToken: response.order_token,
+      status: response.status,
+    });
 
     return response;
   }

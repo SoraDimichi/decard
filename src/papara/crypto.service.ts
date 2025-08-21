@@ -30,4 +30,10 @@ export class CryptoService {
     const signStr = this.secret + values.join('');
     return crypto.createHash('sha256').update(signStr).digest('hex');
   }
+
+  verifySign<T extends Record<string, any>>(payload: T) {
+    const { sign, ...rest } = payload;
+    const expected = this.getApiSign(rest);
+    return expected === sign;
+  }
 }

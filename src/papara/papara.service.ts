@@ -7,7 +7,6 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { PrismaService } from 'src/prisma.service';
 import { DEFAULT_USER } from 'src/seed';
 import {
   CreatePayoutDto,
@@ -17,6 +16,7 @@ import {
   ConfirmPayoutDto,
   ConfirmPayoutResponseDto,
 } from './dto/confirm-payout.dto';
+import { TransactionsModel } from './transactions.model';
 
 @Injectable()
 export class PaparaService {
@@ -26,11 +26,11 @@ export class PaparaService {
   private readonly currency = 'TRY';
 
   constructor(
-    private readonly cryptoService: CryptoService,
-    private configService: ConfigService,
-    private prisma: PrismaService,
+    private readonly crypto: CryptoService,
+    private config: ConfigService,
+    private transactions: TransactionsModel,
   ) {
-    this.shopKey = this.configService.get<string>('SHOP_KEY') || '';
+    this.shopKey = this.config.get<string>('SHOP_KEY') || '';
   }
 
   private getSignedHeaders<T extends Record<string, unknown>>(
@@ -38,7 +38,7 @@ export class PaparaService {
   ): Record<string, string> {
     return {
       'Content-Type': 'application/json',
-      'Api-sign': this.cryptoService.getApiSign(payload),
+      'Api-sign': this.crypto.getApiSign(payload),
     };
   }
 
@@ -105,24 +105,51 @@ export class PaparaService {
       CreatePayinResponseDto,
     );
 
-    await this.prisma.transaction.create({
-      data: {
-        type: 'PAYIN',
-        amount: payload.amount,
-        currency: this.currency,
-        orderToken: response.order_token,
-        status: 'PENDING',
-        user: {
-          connect: { id: DEFAULT_USER.id },
-        },
-      },
+    await this.transactions.create({
+      type: 'PAYIN',
+      amount: payload.amount,
+      orderToken: response.order_token,
+      userId: DEFAULT_USER.id,
     });
+  }
 
-    return response;
+  async confirmPayout(payload: ConfirmPayoutDto) {
+    const preparedPayload = {
+      ...payload,
+      shop_key: this.shopKey,
+    };
+
+    const response = await this.makeApiRequest(
+      '/rest/payoutgate/confirm/',
+      preparedPayload,
+      ConfirmPayoutResponseDto,
+      'PUT',
+    );
+
+    const transaction = await this.transactions.find(response.order_token);
+
+    if (transaction) {
+      await this.transactions.update({
+        id: transaction.id,
+        status: response.status,
+      });
+    }
+  }
+
+  private async checkUserBalance(userId: number, amount: number) {
+    const userBalance = await this.transactions.getUserBalance(userId);
+
+    if (userBalance < amount) {
+      throw new Error(
+        `Insufficient funds. Available balance: ${userBalance}, Requested amount: ${amount}`,
+      );
+    }
   }
 
   async createPaparaPayout(payload: CreatePayoutDto) {
-    const preparedPayload = {
+    await this.checkUserBalance(DEFAULT_USER.id, payload.amount);
+
+    const initPayload = {
       ...payload,
       currency: this.currency,
       user_id: DEFAULT_USER.id,
@@ -132,38 +159,21 @@ export class PaparaService {
 
     const response = await this.makeApiRequest(
       '/rest/payoutgate/papara/',
-      preparedPayload,
+      initPayload,
       CreatePayoutResponseDto,
     );
 
-    await this.prisma.transaction.create({
-      data: {
-        type: 'PAYOUT',
-        amount: payload.amount,
-        currency: this.currency,
-        number: payload.number,
-        orderToken: response.order_token,
-        status: 'PENDING',
-        user: {
-          connect: { id: DEFAULT_USER.id },
-        },
-      },
+    await this.transactions.create({
+      type: 'PAYOUT',
+      amount: payload.amount,
+      number: payload.number,
+      orderToken: response.order_token,
+      userId: DEFAULT_USER.id,
     });
 
-    return response;
-  }
-
-  async confirmPayout(payload: ConfirmPayoutDto) {
-    const preparedPayload = {
-      ...payload,
+    return await this.confirmPayout({
+      order_token: response.order_token,
       shop_key: this.shopKey,
-    };
-
-    return this.makeApiRequest(
-      '/rest/payoutgate/confirm/',
-      preparedPayload,
-      ConfirmPayoutResponseDto,
-      'PUT',
-    );
+    });
   }
 }

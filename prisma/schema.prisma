@@ -28,11 +28,11 @@ enum TransactionStatus {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
+  id         Int    @id @default(autoincrement())
+  email      String @unique
   first_name String
   last_name  String
-  password  String
+  password   String
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -44,27 +44,26 @@ model User {
 }
 
 model Transaction {
-  id           Int              @id @default(autoincrement())
-  type         TransactionType  // Distinguishes between payins and payouts
-  amount       Decimal          @db.Decimal(10, 2)
-  currency     String           @db.VarChar(3)
-  orderToken   String           @unique  // Unique identifier from payment provider
-  status       TransactionStatus @default(PENDING)
+  id         Int               @id @default(autoincrement())
+  type       TransactionType // Distinguishes between payins and payouts
+  amount     Decimal           @db.Decimal(10, 2)
+  orderToken String            @unique // Unique identifier from payment provider
+  status     TransactionStatus @default(PENDING)
 
   // For payouts only - can be null for payins
-  number       String?          // Recipient account number for payouts
+  number String? // Recipient account number for payouts
 
   // User relationship
-  userId       Int
-  user         User             @relation(fields: [userId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 
   // Error handling
   errorCode    String?
   errorMessage String?
 
   // Timestamps
-  createdAt    DateTime         @default(now()) @map("created_at")
-  updatedAt    DateTime         @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("transactions")
 }

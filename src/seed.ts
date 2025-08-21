@@ -11,7 +11,6 @@ export const DEFAULT_USER = {
 };
 
 const main = async () => {
-  // Check if admin user already exists
   const existingAdmin = await prisma.user.findUnique({
     where: { email: 'admin@example.com' },
   });

@@ -7,7 +7,6 @@ describe('CryptoService', () => {
   let service: CryptoService;
   const mockSecret = 'ABCD1234';
 
-  // Mock ConfigService
   const mockConfigService = {
     get: jest.fn().mockImplementation((key) => {
       if (key === 'SECRET_KEY') return mockSecret;
@@ -75,7 +74,7 @@ describe('CryptoService', () => {
 
     it('should sort object keys before generating signature', () => {
       const payload = { c: 'value3', a: 'value1', b: 'value2' };
-      const values = ['value1', 'value2', 'value3']; // Sorted by key
+      const values = ['value1', 'value2', 'value3'];
       const signStr = mockSecret + values.join('');
       const expected = crypto
         .createHash('sha256')
@@ -91,7 +90,6 @@ describe('CryptoService', () => {
         a: 'value1',
         b: { d: 'nested1', c: 'nested2' },
       };
-      // The nested object should be stringified as "{'c': 'nested2', 'd': 'nested1'}"
       const values = ['value1', "{'c': 'nested2', 'd': 'nested1'}"];
       const signStr = mockSecret + values.join('');
       const expected = crypto
@@ -105,7 +103,7 @@ describe('CryptoService', () => {
 
     it('should handle arrays', () => {
       const payload = { a: 'value1', b: [1, 2, 3] };
-      const values = ['value1', '1,2,3']; // Arrays are converted to strings
+      const values = ['value1', '1,2,3'];
       const signStr = mockSecret + values.join('');
       const expected = crypto
         .createHash('sha256')
@@ -131,7 +129,7 @@ describe('CryptoService', () => {
 
     it('should handle null and undefined values', () => {
       const payload = { a: null, b: undefined, c: 'value' };
-      // null becomes 'null', undefined becomes 'undefined'
+
       const values = ['null', 'undefined', 'value'];
       const signStr = mockSecret + values.join('');
       const expected = crypto

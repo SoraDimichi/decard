@@ -1,22 +1,24 @@
 import { Module } from '@nestjs/common';
 import { PaparaController } from './papara.controller';
 import { WebhookController } from './webhook.controller';
-import { PaparaService } from './papara.service';
 import { WebhookService } from './webhook.service';
 import { CryptoService } from './crypto.service';
 import { PrismaService } from '../prisma.service';
 import { TransactionsModel } from './transactions.model';
+import { PaparaPayinService } from './papara-payin.service';
+import { PaparaPayoutService } from './papara-payout.service';
 
 @Module({
   imports: [],
   controllers: [PaparaController, WebhookController],
   providers: [
-    PaparaService,
+    PaparaPayinService,
+    PaparaPayoutService,
     WebhookService,
     CryptoService,
     PrismaService,
     TransactionsModel,
   ],
-  exports: [PaparaService],
+  exports: [PaparaPayinService, PaparaPayoutService],
 })
 export class PaparaModule {}

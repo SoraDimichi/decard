@@ -7,7 +7,11 @@ import {
   Max,
   Min,
   validateSync,
+  IsArray,
+  ArrayNotEmpty,
+  IsIP,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 enum Environment {
   Development = 'development',
@@ -31,6 +35,17 @@ class EnvironmentVariables {
 
   @IsUUID()
   SHOP_KEY: string;
+
+  @Transform(({ value }: { value: string }) =>
+    value ? value.split(',').map((ip: string) => ip.trim()) : [],
+  )
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsIP(undefined, { each: true })
+  WEBHOOK_IP_WHITELIST: string[];
+
+  @IsString()
+  WEBHOOK_ROUTE: string;
 }
 
 export const validate = (config: Record<string, unknown>) => {

@@ -4,7 +4,7 @@ import { CreatePayoutDto } from './dto/create-payout-papara.dto';
 import { PaparaPayinService } from './papara-payin.service';
 import { PaparaPayoutService } from './papara-payout.service';
 
-@Controller()
+@Controller('papara')
 export class PaparaController {
   constructor(
     private paparaPayin: PaparaPayinService,

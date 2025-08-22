@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
-export class TransactionsModel {
+export class TransactionsRepository {
   constructor(private prisma: PrismaService) {}
 
   create(

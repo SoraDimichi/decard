@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DEFAULT_USER } from 'src/seed';
-import { InsufficientFundsException } from '../exceptions/classes/external/insufficient-funds.exception';
+import { InsufficientFundsException } from '../common/exceptions/classes/external/insufficient-funds.exception';
 import { CryptoService } from './crypto.service';
 import {
   ConfirmPayoutDto,
@@ -12,14 +12,14 @@ import {
   CreatePayoutResponseDto,
 } from './dto/create-payout-papara.dto';
 import { PaparaBaseService } from './papara-base.service';
-import { TransactionsModel } from './transactions.model';
+import { TransactionsRepository } from './transactions.repository';
 
 @Injectable()
 export class PaparaPayoutService extends PaparaBaseService {
   constructor(
     protected readonly crypto: CryptoService,
     protected config: ConfigService,
-    private transactions: TransactionsModel,
+    private transactions: TransactionsRepository,
   ) {
     super(crypto, config);
   }

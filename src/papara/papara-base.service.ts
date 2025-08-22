@@ -1,8 +1,8 @@
 import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { ApiErrorException } from '../exceptions/classes/internal/api-error.exception';
-import { InternalValidationErrorException } from '../exceptions/classes/internal/validation-error.exception';
+import { ApiErrorException } from '../common/exceptions/classes/internal/api-error.exception';
+import { InternalValidationErrorException } from '../common/exceptions/classes/internal/validation-error.exception';
 import { CryptoService } from './crypto.service';
 
 export class PaparaBaseService {

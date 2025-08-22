@@ -6,7 +6,7 @@ import { InternalValidationErrorException } from '../common/exceptions/classes/i
 import { CryptoService } from './crypto.service';
 
 export class PaparaBaseService {
-  protected readonly baseUrl: string = 'https://decard.com';
+  protected readonly baseUrl: string = 'https://decard.me';
   protected readonly timeout = 30000;
   protected readonly shopKey: string;
   protected readonly currency = 'TRY';

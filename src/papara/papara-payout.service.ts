@@ -64,7 +64,7 @@ export class PaparaPayoutService extends PaparaBaseService {
     const initPayload = {
       ...payload,
       currency: this.currency,
-      user_id: DEFAULT_USER.id,
+      user_id: DEFAULT_USER.id.toString(),
       recipient_full_name: `${DEFAULT_USER.first_name} ${DEFAULT_USER.last_name}`,
       shop_key: this.shopKey,
     };

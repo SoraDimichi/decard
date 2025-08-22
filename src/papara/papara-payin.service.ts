@@ -32,7 +32,7 @@ export class PaparaPayinService extends PaparaBaseService {
       payment_method_details: {
         first_name: DEFAULT_USER.first_name,
         last_name: DEFAULT_USER.last_name,
-        user_id: DEFAULT_USER.id,
+        user_id: DEFAULT_USER.id.toString(),
       },
     };
 

@@ -38,8 +38,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
         timestamp: new Date().toISOString(),
         path: request.url,
       };
+
+      this.logger.error(
+        `[${statusCode}] External exception: ${request.method} ${request.url} - ${exceptionResponse.message || 'No message'}`,
+        exception instanceof Error ? exception.stack : null,
+      );
     } else if (exception instanceof InternalException) {
       statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+
+      this.logger.error(
+        `[${statusCode}] Internal exception: ${request.method} ${request.url} - ${exception.message || 'No message'}`,
+        exception instanceof Error ? exception.stack : null,
+      );
     } else if (exception instanceof HttpException) {
       const exceptionResponse = exception.getResponse() as
         | string
@@ -59,7 +69,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
 
       this.logger.error(
-        `[${statusCode}] ${request.method} ${request.url}`,
+        `[${statusCode}] HttpException: ${request.method} ${request.url} - ${errorResponse.message || 'No message'}`,
         exception instanceof Error ? exception.stack : null,
       );
     } else {
@@ -70,7 +80,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         error.code.startsWith('P2')
       ) {
         this.logger.error(
-          `Database error: ${error.code} - ${error.message}`,
+          `[${statusCode}] Database error: ${request.method} ${request.url} - ${error.code} - ${error.message}`,
           exception instanceof Error ? exception.stack : String(exception),
         );
 
@@ -81,7 +91,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         };
       } else {
         this.logger.error(
-          `Unhandled exception: ${request.method} ${request.url}`,
+          `[${statusCode}] Unhandled exception: ${request.method} ${request.url} - ${error.message || 'No message'}`,
           exception instanceof Error ? exception.stack : String(exception),
         );
       }

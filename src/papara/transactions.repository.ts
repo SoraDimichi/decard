@@ -33,14 +33,22 @@ export class TransactionsRepository {
 
   private getStatus(status: string) {
     switch (status.toLowerCase()) {
-      case 'completed':
+      case 'success':
         return 'COMPLETED' as const;
-      case 'processing':
+      case 'progress':
+      case 'pending':
+      case 'create':
+      case 'check':
+      case 'auth':
+      case 'preauth':
         return 'PROCESSING' as const;
-      case 'failed':
-        return 'FAILED' as const;
+      case 'reversal':
+      case 'refund':
       case 'canceled':
         return 'CANCELED' as const;
+      case 'error':
+      case 'failed':
+        return 'FAILED' as const;
       default:
         return 'PENDING' as const;
     }

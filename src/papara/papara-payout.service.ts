@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DEFAULT_USER } from 'src/seed';
+import { InsufficientFundsException } from '../exceptions/classes/external/insufficient-funds.exception';
 import { CryptoService } from './crypto.service';
 import {
   ConfirmPayoutDto,
@@ -48,10 +49,13 @@ export class PaparaPayoutService extends PaparaBaseService {
     const userBalance = await this.transactions.getUserBalance(userId);
 
     if (userBalance < amount) {
-      throw new Error(
-        `Insufficient funds. Available balance: ${userBalance}, Requested amount: ${amount}`,
+      throw new InsufficientFundsException(
+        `Insufficient funds for this operation`,
+        { available: userBalance, requested: amount },
       );
     }
+
+    return userBalance;
   }
 
   async createPaparaPayout(payload: CreatePayoutDto) {

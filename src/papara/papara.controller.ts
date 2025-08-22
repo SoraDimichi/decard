@@ -12,12 +12,12 @@ export class PaparaController {
   ) {}
 
   @Post('/payin')
-  createPayment(@Body() payload: CreatePayinDto) {
+  payin(@Body() payload: CreatePayinDto) {
     return this.paparaPayin.createPayin(payload);
   }
 
   @Post('/payout')
-  createPaparaPayout(@Body() payload: CreatePayoutDto) {
+  payout(@Body() payload: CreatePayoutDto) {
     return this.paparaPayout.createPaparaPayout(payload);
   }
 }

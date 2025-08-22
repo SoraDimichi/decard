@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { WebhookNotificationDto } from './dto/webhook-notification.dto';
 import { TransactionsModel } from './transactions.model';
 import { CryptoService } from './crypto.service';
+import { BadRequestException } from '../exceptions/classes/external/bad-request.exception';
 
 @Injectable()
 export class WebhookService {
@@ -10,11 +11,15 @@ export class WebhookService {
     private readonly crypto: CryptoService,
   ) {}
 
-  async handleTransactionStatusUpdate(notification: WebhookNotificationDto) {
+  validateSignature(notification: WebhookNotificationDto): void {
     const isValidSignature = this.crypto.verifySign(notification);
     if (!isValidSignature) {
-      throw new UnauthorizedException('Invalid signature');
+      throw new BadRequestException('Invalid signature');
     }
+  }
+
+  async handleTransactionStatusUpdate(notification: WebhookNotificationDto) {
+    this.validateSignature(notification);
 
     await this.transactions.update({
       orderToken: notification.token,

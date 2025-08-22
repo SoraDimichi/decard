@@ -1,98 +1,142 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Decard - Papara Payment Integration Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Project Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Decard is a NestJS-based payment integration service that connects with Papara, a payment processing platform. The application facilitates both payment collection (payin) and disbursement (payout) operations, while also handling webhook notifications from the payment provider.
 
-## Description
+## Architecture
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Core Components
 
-## Project setup
+The application follows a modular architecture based on NestJS framework principles:
 
-```bash
-$ npm install
+```mermaid
+graph TD
+    A[Main Application] --> B[Papara Module]
+    B --> C[Payin Service]
+    B --> D[Payout Service]
+    B --> E[Webhook Service]
+    C & D --> F[Base Service]
+    C & D & E --> G[Transactions Repository]
+    G --> H[Prisma Service]
+    H --> I[(PostgreSQL Database)]
 ```
 
-## Compile and run the project
+### Key Components
 
-```bash
-# development
-$ npm run start
+1. **Papara Module**: Central module that orchestrates all payment-related functionality
+2. **Payin Service**: Handles payment collection operations
+3. **Payout Service**: Manages disbursement operations with balance validation
+4. **Webhook Service**: Processes notifications from Papara about transaction status changes
+5. **Transactions Repository**: Manages database operations for transactions
+6. **Crypto Service**: Handles cryptographic operations for API signing
 
-# watch mode
-$ npm run start:dev
+## API Endpoints
 
-# production mode
-$ npm run start:prod
+The application exposes the following API endpoints:
+
+### Payment Operations
+
+- **POST /papara/payin**: Create a new payment collection request
+  - Accepts payment details and returns a payment token
+  - Creates a transaction record in the database
+
+- **POST /papara/payout**: Create a new disbursement request
+  - Validates user balance before processing
+  - Creates a transaction record and automatically confirms the payout
+
+### Webhook
+
+- **POST /{webhook_route}**: Receives transaction status updates from Papara
+  - Route path is configurable via environment variables
+  - Validates webhook signature
+  - Updates transaction status in the database
+
+## Database Schema
+
+The application uses PostgreSQL with Prisma ORM and includes the following models:
+
+### User Model
+
+```
+model User {
+  id         Int    @id @default(autoincrement())
+  email      String @unique
+  first_name String
+  last_name  String
+  password   String
+
+  transactions Transaction[]
+}
 ```
 
-## Run tests
+### Transaction Model
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
 ```
+model Transaction {
+  id         Int               @id @default(autoincrement())
+  type       TransactionType   // PAYIN or PAYOUT
+  amount     Decimal           @db.Decimal(10, 2)
+  orderToken String            @unique
+  status     TransactionStatus @default(PENDING)
+  number     String?           // Recipient account number for payouts
+  userId     Int
+  user       User              @relation(fields: [userId], references: [id])
+  errorCode  String?
+  errorMessage String?
+}
+```
+
+Transaction statuses include: PENDING, PROCESSING, COMPLETED, FAILED, CANCELED
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+The application is containerized using Docker and can be deployed using Docker Compose.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Development Deployment
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Set up environment variables in .env file
+# Then run:
+docker compose up --build -d
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+This will:
 
-## Resources
+- Build the Docker image with the development target
+- Start the application in development mode with hot-reload
+- Run database migrations and seed data
+- Mount the local codebase as a volume for live code changes
 
-Check out a few resources that may come in handy when working with NestJS:
+### Production Deployment
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+# Set up environment variables in .env file
+# Then run:
+docker compose -f docker-compose.prod.yml up --build -d
+```
 
-## Support
+This will:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- Build the Docker image with the production target
+- Start the application in production mode
+- Run database migrations and seed data
+- Use optimized production settings
 
-## Stay in touch
+### Environment Variables
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Key environment variables required:
 
-## License
+- `DATABASE_URL`: PostgreSQL connection string
+- `PORT`: Application port
+- `SECRET_KEY`: Secret key for encryption
+- `SHOP_KEY`: Papara shop key
+- `WEBHOOK_IP_WHITELIST`: Comma-separated list of allowed IPs for webhooks
+- `WEBHOOK_ROUTE`: Custom route for webhook endpoint (default: 'webhook')
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Security Features
+
+1. **IP Whitelisting**: Webhook endpoints are protected with IP whitelisting
+2. **Signature Verification**: All webhook notifications are verified using cryptographic signatures
+3. **Exception Handling**: Comprehensive exception handling with custom error classes
+4. **Input Validation**: Request validation using class-validator

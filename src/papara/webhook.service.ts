@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { WebhookNotificationDto } from './dto/webhook-notification.dto';
-import { TransactionsModel } from './transactions.model';
+import { TransactionsRepository } from './transactions.repository';
 import { CryptoService } from './crypto.service';
 import { BadRequestException } from '../common/exceptions/classes/external/bad-request.exception';
 
 @Injectable()
 export class WebhookService {
   constructor(
-    private transactions: TransactionsModel,
+    private transactions: TransactionsRepository,
     private readonly crypto: CryptoService,
   ) {}
 

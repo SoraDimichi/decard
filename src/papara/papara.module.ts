@@ -4,7 +4,7 @@ import { WebhookController } from './webhook.controller';
 import { WebhookService } from './webhook.service';
 import { CryptoService } from './crypto.service';
 import { PrismaService } from '../prisma.service';
-import { TransactionsModel } from './transactions.model';
+import { TransactionsRepository } from './transactions.repository';
 import { PaparaPayinService } from './papara-payin.service';
 import { PaparaPayoutService } from './papara-payout.service';
 
@@ -17,7 +17,7 @@ import { PaparaPayoutService } from './papara-payout.service';
     WebhookService,
     CryptoService,
     PrismaService,
-    TransactionsModel,
+    TransactionsRepository,
   ],
   exports: [PaparaPayinService, PaparaPayoutService],
 })

@@ -7,14 +7,14 @@ import {
   CreatePayinResponseDto,
 } from './dto/create-payin-simple.dto';
 import { PaparaBaseService } from './papara-base.service';
-import { TransactionsModel } from './transactions.model';
+import { TransactionsRepository } from './transactions.repository';
 
 @Injectable()
 export class PaparaPayinService extends PaparaBaseService {
   constructor(
     protected readonly crypto: CryptoService,
     protected config: ConfigService,
-    private transactions: TransactionsModel,
+    private transactions: TransactionsRepository,
   ) {
     super(crypto, config);
   }
